@@ -2,6 +2,14 @@
 /*jslint sloppy:true, browser: true, devel: true, eqeq: true, vars: true, white: true*/
 var game;
 
+var mainmenu = {
+    preload: function() {
+        
+    },
+    create: function() {},
+    update: function() {}
+};
+
 var mainState = {
     // Here we add all the functions we need for our state
     // For this project we will just have 3 functions
@@ -37,4 +45,5 @@ game = new Phaser.Game(640, 480, Phaser.AUTO, 'gameDiv');
 
 // And finally we tell Phaser to add and start our 'main' state
 game.state.add('main', mainState);
+game.state.add('mainmenu', mainmenu);
 game.state.start('main');
