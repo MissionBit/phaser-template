@@ -20,7 +20,7 @@ var mainMenu = {
         this.clouds = game.add.group(game, 'cloud', 'clouds');
         this.clouds.scale.x = 0.1; this.clouds.scale.y = 0.1;
         this.clouds.enableBody = true;
-        this.clouds.createMultiple(20, 'cloud');
+        this.clouds.createMultiple(5, 'cloud');
         game.time.events.loop(3000, this.addCloud, this);
         
     },
@@ -29,9 +29,9 @@ var mainMenu = {
     addCloud: function(){
         var cloud = this.clouds.getFirstDead();
         cloud.reset(game.stage.width * 9 , Math.random() * 1000);
-        cloud.body.velocity.x = Math.random() * -500;
+        cloud.body.velocity.x = Math.floor(Math.random() * -500 - 300);
         cloud.checkWorldBounds = true;
-        cloud.outofBoundKill = true;
+        cloud.outOfBoundsKill = true;
     }
 };
 
