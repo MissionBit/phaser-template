@@ -4,9 +4,18 @@ var game;
 
 var mainMenu = {
     preload: function() {
+        game.load.image('ferrisWheel', 'imgs/ferrisWheel.png');
+        game.load.image('sky', 'imgs/skyBackground.png');
+    },
+    create: function() {
+        //backgrounds
+        this.bgSky = game.add.sprite(0,0, 'sky');
+        this.bgSky.scale.x = 0.8; this.bgSky.scale.y = 0.8;
+        this.bgWheel = game.add.sprite(0,0 , 'ferrisWheel');
+        this.bgWheel.scale.x = 1.2; this.bgWheel.scale.y = 1.2;
+        this.bgWheel.position.y = game.stage.height - this.bgWheel.height;
         
     },
-    create: function() {},
     update: function() {}
 };
 
@@ -16,7 +25,7 @@ var mainState = {
     preload: function () {
         // This function will be executed at the beginning
         // That's where we load the game's assets
-        game.load.image('logo', 'missionbit.png');
+        game.load.image('logo', 'imgs/missionbit.png');
     },
     create: function () {
         // This function is called after the preload function
@@ -46,4 +55,4 @@ game = new Phaser.Game(640, 480, Phaser.AUTO, 'gameDiv');
 // And finally we tell Phaser to add and start our 'main' state
 game.state.add('main', mainState);
 game.state.add('mainMenu', mainMenu);
-game.state.start('main');
+game.state.start('mainMenu');
