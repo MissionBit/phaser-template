@@ -6,6 +6,7 @@ var mainMenu = {
     preload: function() {
         game.load.image('ferrisWheel', 'imgs/ferrisWheel.png');
         game.load.image('sky', 'imgs/skyBackground.png');
+        game.load.image('cloud', 'imgs/cloud.png');
     },
     create: function() {
         //backgrounds
@@ -15,8 +16,23 @@ var mainMenu = {
         this.bgWheel.scale.x = 1.2; this.bgWheel.scale.y = 1.2;
         this.bgWheel.position.y = game.stage.height - this.bgWheel.height;
         
+        //animating clouds
+        this.clouds = game.add.group(game, 'cloud', 'clouds');
+        this.clouds.scale.x = 0.1; this.clouds.scale.y = 0.1;
+        this.clouds.enableBody = true;
+        this.clouds.createMultiple(20, 'cloud');
+        game.time.events.loop(3000, this.addCloud, this);
+        
     },
-    update: function() {}
+    update: function() {},
+    
+    addCloud: function(){
+        var cloud = this.clouds.getFirstDead();
+        cloud.reset(game.stage.width * 9 , Math.random() * 1000);
+        cloud.body.velocity.x = Math.random() * -500;
+        cloud.checkWorldBounds = true;
+        cloud.outofBoundKill = true;
+    }
 };
 
 var mainState = {
