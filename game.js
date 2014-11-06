@@ -21,15 +21,22 @@ var mainMenu = {
         this.clouds = game.add.group(game, 'cloud', 'clouds');
         this.clouds.scale.x = 0.1; this.clouds.scale.y = 0.1;
         this.clouds.enableBody = true;
-        this.clouds.createMultiple(5, 'cloud');
-        game.time.events.loop(3000, this.addCloud, this);
+        this.clouds.createMultiple(30, 'cloud');
+        game.time.events.loop(2000, this.addCloud, this);
         
         //start button
         this.start = game.add.button(0,0, 'start', this.start);
         this.start.x = game.world.width/2 - this.start.width/2;
         this.start.y = game.world.height - this.start.height;
+        
+        //fonts or text
+        var title = "Llama Empire";
+        var style = {font: "28px Arial", fill: "#ff0044", align: "center"};
+
     },
-    update: function() {},
+    update: function() {
+        
+    },
     
     addCloud: function(){
         var cloud = this.clouds.getFirstDead();
@@ -37,6 +44,10 @@ var mainMenu = {
         cloud.body.velocity.x = Math.floor(Math.random() * -500 - 300);
         cloud.checkWorldBounds = true;
         cloud.outOfBoundsKill = true;
+    },
+    
+    start: function(){
+        game.state.start('main'); 
     }
 };
 
