@@ -7,6 +7,7 @@ var mainMenu = {
         game.load.image('ferrisWheel', 'imgs/ferrisWheel.png');
         game.load.image('sky', 'imgs/skyBackground.png');
         game.load.image('cloud', 'imgs/cloud.png');
+        game.load.image('start', 'imgs/start.jpg');
     },
     create: function() {
         //backgrounds
@@ -23,6 +24,10 @@ var mainMenu = {
         this.clouds.createMultiple(5, 'cloud');
         game.time.events.loop(3000, this.addCloud, this);
         
+        //start button
+        this.start = game.add.button(0,0, 'start', this.start);
+        this.start.x = game.world.width/2 - this.start.width/2;
+        this.start.y = game.world.height - this.start.height;
     },
     update: function() {},
     
