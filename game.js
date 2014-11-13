@@ -25,7 +25,7 @@ var mainMenu = {
         game.time.events.loop(1000, this.addCloud, this);
         
         //start button
-        this.start = game.add.button(0,0, 'start', this.start);
+        this.start = game.add.button(0,0, 'start', this.start, this);
         this.start.x = game.world.width/2 - this.start.width/2;
         this.start.y = game.world.height - this.start.height;
         
@@ -35,7 +35,6 @@ var mainMenu = {
 
     },
     update: function() {
-        
     },
     
     addCloud: function(){
@@ -48,6 +47,7 @@ var mainMenu = {
     },
     
     start: function(){
+        this.clouds.destroy();
         game.state.start('main'); 
     }
 };
@@ -65,6 +65,9 @@ var mainState = {
         //backgrounds
         this.bgSky = game.add.sprite(0,0, 'sky');
         
+        //timers
+        game.time.events.loop(2000, this.addLlama, this);
+        
         //fence
         this.hFence = game.add.sprite(0,200, 'fence');
         this.hFence.scale.x = 0.3; this.hFence.scale.y = 0.1;
@@ -73,18 +76,35 @@ var mainState = {
         this.vFence.angle = 90;
         
         //llama stuff
-        this.llamas = game.add.group(game, 'llamas','llama');
+        //TODO: MAKE SPRITE CLASS AND MAKE IT RESEMBLE BUTTONS CLASS
+        this.llamaCount = 5;
+        this.llama = game.add.button(0, this.hFence.position.y -10, 'llama', this.llamaOnClick, this);
+        this.llamas = game.add.group(game, 'llama','llamas');
+        this.llamas.scale.x = 0.3; this.llamas.scale.y = 0.3;
         this.llamas.enableBody = true;
-        this.llamas.createMultiple(this.llamaCount, 'llamas');
-        this.llama = game.add.button(0, this.hFence.position.y -10, 'llama', this.llamaOnClick,             this);
-        this.llamaCount = 0;
-
+        this.llamas.createMultiple(this.llamaCount, 'llama');
         //currency
         this.money = 0;
         
         //text
         this.llamaText = game.add.text(0,0,'Llamas: '+ this.llamaCount, { fontSize: '22px', fill: '#fff'});
         this.moneyText = game.add.text(game.world.width/2 , 0, 'Money: $' + this.money,  { fontSize: '22px', fill: '#fff'});
+        
+        //llama bar
+        this.bar = game.add.sprite(this.llama.position.x, this.llama.position.y + 20, 'bar');
+        this.bar.scale.x = 0.3; this.bar.scale.y = 0.1;
+        this.bar.visible = false;
+
+        //buy button
+        this.buyButton = game.add.button(this.bar.position.x + 10, this.bar.position.y +0.1, 'buy', this.buyOnClick, this);
+        this.buyButton.scale.x = 0.17; this.buyButton.scale.y = 0.17;
+        this.buyButton.visible = false;
+
+        //sell button
+        this.sellButton = game.add.button(this.bar.position.x + this.bar.width /2, this.bar.position.y +0.1,'sell', this.sellOnClick, this);
+        this.sellButton.scale.x = 0.17; this.sellButton.scale.y = 0.17;
+        this.sellButton.visible = false;
+
                 
     },
     
@@ -92,18 +112,19 @@ var mainState = {
         //update texts
         this.llamaText.setText('Llamas: '+ this.llamaCount);
         this.moneyText.setText('Money: $' + this.money);
+        
+        //llamas bounce around in fence
+        game.physics.arcade.overlap(this.hFence|| this.vFence, this.llamas, this.bouncingLlama, this);
+        if (this.llamas.inWorld == false){
+            this.bouncingLlama();
+        }
     }, 
     
     llamaOnClick: function() {
-        this.bar = game.add.sprite(this.llama.position.x, this.llama.position.y + 20, 'bar');
-        this.bar.scale.x = 0.3; this.bar.scale.y = 0.1;
-        //buy button
-        this.buyButton = game.add.button(this.bar.position.x + 10, this.bar.position.y +0.1, 'buy',         this.buyOnClick, this);
-        this.buyButton.scale.x = 0.17; this.buyButton.scale.y = 0.17;
-        //sell button
-        this.sellButton = game.add.button(this.bar.position.x + this.bar.width /2, this.bar.position.y +0.1,               'sell', this.sellOnClick, this);
-        this.sellButton.scale.x = 0.17; this.sellButton.scale.y = 0.17;
-        
+        this.bar.visible = !this.bar.visible;
+        this.buyButton.visible = !this.buyButton.visible;
+        this.sellButton.visible = !this.sellButton.visible;
+
     },
     
     buyOnClick: function () {
@@ -114,6 +135,20 @@ var mainState = {
     sellOnClick: function() {
         this.llamaCount --;
         this.money += 50;
+    },
+    
+    addLlama: function() {
+        this.llamas.scale.x = 0.3; this.llamas.scale.y = 0.3;
+        var llama = this.llamas.getFirstDead();
+        llama.reset(350,1000 );
+        llama.body.velocity.x = 100; 
+        llama.body.velocity.y = 300;
+        llama.checkWorldBounds = true;
+    },
+    
+    bouncingLlama: function() {
+        this.llamas.body.velocity.x = -100;
+        this.llamas.body.velocity.y = -200;
     }
 };
 
