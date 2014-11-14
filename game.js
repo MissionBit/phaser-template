@@ -62,6 +62,7 @@ var mainState = {
         game.load.image('sell', 'imgs/sellButton.png');
     },
     create: function () {
+        game.physics.startSystem(Phaser.Physics.ARCADE);
         //backgrounds
         this.bgSky = game.add.sprite(0,0, 'sky');
         
@@ -115,9 +116,6 @@ var mainState = {
         
         //llamas bounce around in fence
         game.physics.arcade.overlap(this.hFence|| this.vFence, this.llamas, this.bouncingLlama, this);
-        if (this.llamas.inWorld == false){
-            this.bouncingLlama();
-        }
     }, 
     
     llamaOnClick: function() {
@@ -134,16 +132,19 @@ var mainState = {
     
     sellOnClick: function() {
         this.llamaCount --;
-        this.money += 50;
+        this.money += 100;
     },
     
     addLlama: function() {
-        this.llamas.scale.x = 0.3; this.llamas.scale.y = 0.3;
         var llama = this.llamas.getFirstDead();
-        llama.reset(350,1000 );
+        //don't know why reset = null when reset.y is a big number like 1000
+        llama.reset(400, 0);
         llama.body.velocity.x = 100; 
         llama.body.velocity.y = 300;
         llama.checkWorldBounds = true;
+        llama.body.collideWorldBounds = true;
+        llama.body.bounce.set(1);
+        this.llamaCount ++;
     },
     
     bouncingLlama: function() {
