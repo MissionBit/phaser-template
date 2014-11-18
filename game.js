@@ -55,37 +55,36 @@ var mainMenu = {
 var mainState = {
     preload: function () {
         game.load.image('sky', 'imgs/skyBackground.png');
-        game.load.image('fence', 'imgs/horizontalFence.svg');
+        game.load.image('hfence', 'imgs/horizontalFence.png');
         game.load.image('llama' , 'imgs/placeholder.png');
         game.load.image('bar', 'imgs/bar.png');
         game.load.image('buy', 'imgs/buyButton.png');
         game.load.image('sell', 'imgs/sellButton.png');
+        game.load.image('llamas', 'imgs/placeholder_mini.png');
+        game.load.image('vFence', 'imgs/verticalFence.png');
     },
     create: function () {
         game.physics.startSystem(Phaser.Physics.ARCADE);
         //backgrounds
         this.bgSky = game.add.sprite(0,0, 'sky');
         
-        //timers
-        game.time.events.loop(2000, this.addLlama, this);
-        
         //fence
-        this.hFence = game.add.sprite(0,200, 'fence');
-        this.hFence.scale.x = 0.3; this.hFence.scale.y = 0.1;
-        this.vFence = game.add.sprite(this.hFence.width + this.hFence.height, 200, 'fence');
-        this.vFence.scale.x = 0.3; this.vFence.scale.y = 0.1;
-        this.vFence.angle = 90;
+        this.hFence = game.add.sprite(0,200, 'hfence');
+        game.physics.arcade.enable(this.hFence);
+        this.hFence.body.immovable = true;
+        this.vFence = game.add.sprite(270, 200, 'vFence');
+        game.physics.arcade.enable(this.vFence);
+        this.vFence.body.immovable = true;
         
         //llama stuff
         //TODO: MAKE SPRITE CLASS AND MAKE IT RESEMBLE BUTTONS CLASS
-        this.llamaCount = 5;
+        this.llamaCount = 1;
         this.llama = game.add.button(0, this.hFence.position.y -10, 'llama', this.llamaOnClick, this);
-        this.llamas = game.add.group(game, 'llama','llamas');
-        this.llamas.scale.x = 0.3; this.llamas.scale.y = 0.3;
+        this.llamas = game.add.group(game, 'llamas','llamas');
         this.llamas.enableBody = true;
-        this.llamas.createMultiple(this.llamaCount, 'llama');
+        this.llamas.createMultiple(1000, 'llamas');
         //currency
-        this.money = 0;
+        this.money = 500;
         
         //text
         this.llamaText = game.add.text(0,0,'Llamas: '+ this.llamaCount, { fontSize: '22px', fill: '#fff'});
@@ -113,9 +112,13 @@ var mainState = {
         //update texts
         this.llamaText.setText('Llamas: '+ this.llamaCount);
         this.moneyText.setText('Money: $' + this.money);
+        this.now = new Date().getTime() / 1000;
+        this.starve();
         
-        //llamas bounce around in fence
-        game.physics.arcade.overlap(this.hFence|| this.vFence, this.llamas, this.bouncingLlama, this);
+        //keep llamas inside fence
+        game.physics.arcade.collide(this.llamas, this.hFence);
+        game.physics.arcade.collide(this.llamas, this.vFence);
+
     }, 
     
     llamaOnClick: function() {
@@ -126,31 +129,45 @@ var mainState = {
     },
     
     buyOnClick: function () {
-        this.llamaCount ++;
-        this.money -= 100;
+        if (this.money >= 100) {
+            this.llamaCount ++;
+            this.addLlama();
+            this.money -= 100;
+        }
     },
     
     sellOnClick: function() {
-        this.llamaCount --;
-        this.money += 100;
+        if (this.llamaCount > 0){
+            this.llamaCount --;
+            this.money += 100;
+            this.sell();
+        }
     },
     
     addLlama: function() {
         var llama = this.llamas.getFirstDead();
-        //don't know why reset = null when reset.y is a big number like 1000
-        llama.reset(400, 0);
-        llama.body.velocity.x = 100; 
-        llama.body.velocity.y = 300;
+        if (llama === null) {return;}
+        llama.reset(0, 400);
+        llama.body.velocity.x = Math.random() * 100 ; 
+        llama.body.velocity.y = Math.random() * 300;
         llama.checkWorldBounds = true;
         llama.body.collideWorldBounds = true;
         llama.body.bounce.set(1);
-        this.llamaCount ++;
+        this.lastFed = new Date().getTime() / 1000;
     },
     
-    bouncingLlama: function() {
-        this.llamas.body.velocity.x = -100;
-        this.llamas.body.velocity.y = -200;
+    sell: function() {
+        var llama = this.llamas.getFirstAlive();
+        llama.kill();
+    },
+    
+    starve: function() {
+        if (this.now - this.lastFed > 10) {
+            this.sell();
+        }
     }
+    
+
 };
 
 // Initialize Phaser
