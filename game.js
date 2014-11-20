@@ -3,6 +3,7 @@
 var game;
 
 var mainMenu = {
+
     preload: function() {
         game.load.image('ferrisWheel', 'imgs/ferrisWheel.png');
         game.load.image('sky', 'imgs/skyBackground.png');
@@ -62,6 +63,9 @@ var mainState = {
         game.load.image('sell', 'imgs/sellButton.png');
         game.load.image('llamas', 'imgs/placeholder_mini.png');
         game.load.image('vFence', 'imgs/verticalFence.png');
+        game.load.image('feedAlert', 'imgs/feedAlert.png');
+        game.load.image('grass', 'imgs/grass.png');
+        game.load.image('feed', 'imgs/feedButton.png');
     },
     create: function () {
         game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -92,18 +96,29 @@ var mainState = {
         
         //llama bar
         this.bar = game.add.sprite(this.llama.position.x, this.llama.position.y + 20, 'bar');
-        this.bar.scale.x = 0.3; this.bar.scale.y = 0.1;
+        this.bar.scale.x = 0.32; this.bar.scale.y = 0.1;
         this.bar.visible = false;
 
         //buy button
-        this.buyButton = game.add.button(this.bar.position.x + 10, this.bar.position.y +0.1, 'buy', this.buyOnClick, this);
-        this.buyButton.scale.x = 0.17; this.buyButton.scale.y = 0.17;
+        this.buyButton = game.add.button(this.bar.position.x + 5, this.bar.position.y +0.1, 'buy', this.buyOnClick, this);
         this.buyButton.visible = false;
+        game.physics.arcade.enable(this.buyButton);
+
 
         //sell button
-        this.sellButton = game.add.button(this.bar.position.x + this.bar.width /2, this.bar.position.y +0.1,'sell', this.sellOnClick, this);
-        this.sellButton.scale.x = 0.17; this.sellButton.scale.y = 0.17;
+        this.sellButton = game.add.button(this.buyButton.position.x+ this.buyButton.width + 5 , this.buyButton.position.y,'sell', this.sellOnClick, this);
         this.sellButton.visible = false;
+        game.physics.arcade.enable(this.sellButton);
+
+            
+        //feeding stuff
+        this.feedButton = game.add.button(this.sellButton.position.x +this.sellButton.width + 5, this.sellButton.position.y, 'feed', this.feedOnClick, this);
+        this.feedButton.visible = false;
+        this.grass = game.add.sprite(0,0, 'grass');
+        this.grass.visible = false;
+        this.feedAlert = game.add.sprite(this.vFence.position.x, this.vFence.position.y, 'feedAlert');
+        this.feedAlert.visible = false;
+        
 
                 
     },
@@ -125,11 +140,12 @@ var mainState = {
         this.bar.visible = !this.bar.visible;
         this.buyButton.visible = !this.buyButton.visible;
         this.sellButton.visible = !this.sellButton.visible;
+        this.feedButton.visible =!this.feedButton.visible;
 
     },
     
     buyOnClick: function () {
-        if (this.money >= 100) {
+        if (this.money >= 100 ) {
             this.llamaCount ++;
             this.addLlama();
             this.money -= 100;
@@ -137,11 +153,15 @@ var mainState = {
     },
     
     sellOnClick: function() {
-        if (this.llamaCount > 0){
+        if (this.llamaCount > 1){
             this.llamaCount --;
             this.money += 100;
             this.sell();
         }
+    },
+    feedOnClick: function() {
+        var llama = this.llamas.getFirstAlive();
+        this.lastFed = new Date().getTime() / 1000;
     },
     
     addLlama: function() {
@@ -159,20 +179,24 @@ var mainState = {
     sell: function() {
         var llama = this.llamas.getFirstAlive();
         llama.kill();
+        this.feedAlert.visible = false;
     },
     
     starve: function() {
-        if (this.now - this.lastFed > 10) {
+        //change number to change time(seconds) needed for llama to starve + die
+        if (this.now - this.lastFed > 15){
+            this.feedAlert.visible = true;
+        }
+        if (this.now - this.lastFed > 30) {
             this.sell();
         }
-    }
+    }    
     
 
 };
 
 // Initialize Phaser
 game = new Phaser.Game(640, 480, Phaser.AUTO, 'gameDiv');
-
 // And finally we tell Phaser to add and start our 'main' state
 game.state.add('main', mainState);
 game.state.add('mainMenu', mainMenu);
