@@ -69,6 +69,7 @@ var mainState = {
     },
     create: function () {
         game.physics.startSystem(Phaser.Physics.ARCADE);
+        
         //backgrounds
         this.bgSky = game.add.sprite(0,0, 'sky');
         
@@ -118,8 +119,7 @@ var mainState = {
         this.grass.visible = false;
         this.feedAlert = game.add.sprite(this.vFence.position.x, this.vFence.position.y, 'feedAlert');
         this.feedAlert.visible = false;
-        
-
+        this.feedAlertTime = 15;
                 
     },
     
@@ -128,7 +128,10 @@ var mainState = {
         this.llamaText.setText('Llamas: '+ this.llamaCount);
         this.moneyText.setText('Money: $' + this.money);
         this.now = new Date().getTime() / 1000;
-        this.starve();
+        var llama = this.llamas.getFirstAlive();
+        if (llama != null){
+            this.starve();
+        } else {return;}
         
         //keep llamas inside fence
         game.physics.arcade.collide(this.llamas, this.hFence);
@@ -160,8 +163,12 @@ var mainState = {
         }
     },
     feedOnClick: function() {
-        var llama = this.llamas.getFirstAlive();
-        this.lastFed = new Date().getTime() / 1000;
+        this.llamas.forEachAlive(function(llama){
+            if (this.now - llama.lastFed > this.feedAlertTime){
+                llama.lastFed = new Date().getTime() / 1000;
+                this.money -= 20;
+            }
+        }, this)
     },
     
     addLlama: function() {
@@ -173,24 +180,28 @@ var mainState = {
         llama.checkWorldBounds = true;
         llama.body.collideWorldBounds = true;
         llama.body.bounce.set(1);
-        this.lastFed = new Date().getTime() / 1000;
+        llama.lastFed = new Date().getTime() / 1000;
     },
     
     sell: function() {
         var llama = this.llamas.getFirstAlive();
         llama.kill();
-        this.feedAlert.visible = false;
     },
     
     starve: function() {
         //change number to change time(seconds) needed for llama to starve + die
-        if (this.now - this.lastFed > 15){
-            this.feedAlert.visible = true;
-        }
-        if (this.now - this.lastFed > 30) {
-            this.sell();
-        }
-    }    
+        this.feedAlert.visible = false;
+        this.llamas.forEachAlive(function(llama) {
+            if (this.now - llama.lastFed > this.feedAlertTime){
+                this.feedAlert.visible = true;
+            }
+            if (this.now - llama.lastFed > 30) {
+                this.sell();
+            }
+        }, this);
+        
+    }
+       
     
 
 };
