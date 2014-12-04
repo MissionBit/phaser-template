@@ -66,6 +66,7 @@ var mainState = {
         game.load.image('feedAlert', 'imgs/feedAlert.png');
         game.load.image('grass', 'imgs/grass.png');
         game.load.image('feed', 'imgs/feedButton.png');
+        game.load.image('all', 'imgs/all.png');
     },
     create: function () {
         game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -88,8 +89,7 @@ var mainState = {
         this.llamas = game.add.group(game, 'llamas','llamas');
         this.llamas.enableBody = true;
         this.llamas.createMultiple(1000, 'llamas');
-        //currency
-        this.money = 500;
+
         
         //text
         this.llamaText = game.add.text(0,0,'Llamas: '+ this.llamaCount, { fontSize: '22px', fill: '#fff'});
@@ -97,14 +97,14 @@ var mainState = {
         
         //llama bar
         this.bar = game.add.sprite(this.llama.position.x, this.llama.position.y + 20, 'bar');
-        this.bar.scale.x = 0.32; this.bar.scale.y = 0.1;
+        this.bar.scale.x = 0.45; this.bar.scale.y = 0.1;
         this.bar.visible = false;
 
         //buy button
         this.buyButton = game.add.button(this.bar.position.x + 5, this.bar.position.y +0.1, 'buy', this.buyOnClick, this);
         this.buyButton.visible = false;
         game.physics.arcade.enable(this.buyButton);
-
+        
 
         //sell button
         this.sellButton = game.add.button(this.buyButton.position.x+ this.buyButton.width + 5 , this.buyButton.position.y,'sell', this.sellOnClick, this);
@@ -115,12 +115,24 @@ var mainState = {
         //feeding stuff
         this.feedButton = game.add.button(this.sellButton.position.x +this.sellButton.width + 5, this.sellButton.position.y, 'feed', this.feedOnClick, this);
         this.feedButton.visible = false;
-        this.grass = game.add.sprite(0,0, 'grass');
-        this.grass.visible = false;
         this.feedAlert = game.add.sprite(this.vFence.position.x, this.vFence.position.y, 'feedAlert');
         this.feedAlert.visible = false;
         this.feedAlertTime = 15;
-                
+        game.physics.arcade.enable(this.feedButton);
+        
+        //feed all 
+        this.feedAllButton = game.add.button(this.feedButton.position.x + this.feedButton.width + 5, this.feedButton.position.y, 'all', this.feedAll, this);
+        this.feedAllButton.visible = false;
+        
+        //grass supply
+        /*this.grass = game.add.button(this.moneyText.position.x + game.world.width/4, 0, 'grass', this.grassOnclick, this);
+        this.gBuyButton = game.add.button(this.grass.position.x + 10, this.grass.position.y + this.grass.height, this.buyGrass , this);
+        this.gbuyButton.visible = false;*/
+        
+        //variables
+        this.growth = 0.2;
+        this.money = 500;
+             
     },
     
     update: function () {
@@ -131,7 +143,9 @@ var mainState = {
         var llama = this.llamas.getFirstAlive();
         if (llama != null){
             this.starve();
+            this.grow();
         } else {return;}
+        
         
         //keep llamas inside fence
         game.physics.arcade.collide(this.llamas, this.hFence);
@@ -144,6 +158,7 @@ var mainState = {
         this.buyButton.visible = !this.buyButton.visible;
         this.sellButton.visible = !this.sellButton.visible;
         this.feedButton.visible =!this.feedButton.visible;
+        this.feedAllButton.visible = !this.feedAllButton.visible;
 
     },
     
@@ -158,29 +173,43 @@ var mainState = {
     sellOnClick: function() {
         if (this.llamaCount > 1){
             this.llamaCount --;
-            this.money += 100;
+            var llama = this.llamas.getFirstAlive();
+            this.multiple = ((llama.scale.x - 1 ) / this.growth ) + 1 ;
+            this.money = this.money + Math.floor( 100 * this.multiple);
             this.sell();
         }
     },
     feedOnClick: function() {
-        this.llamas.forEachAlive(function(llama){
-            if (this.now - llama.lastFed > this.feedAlertTime){
+        if (this.money >= 20) {
+            this.llamas.forEachAlive(function(llama){
+                if (this.now - llama.lastFed > this.feedAlertTime){
+                    llama.lastFed = new Date().getTime() / 1000;
+                    this.money -= 20;
+                }
+            }, this)
+        }
+    },
+    feedAll: function(){
+        if (this.money >= this.llamaCount * 20) {
+            this.llamas.forEachAlive(function(llama) {
                 llama.lastFed = new Date().getTime() / 1000;
-                this.money -= 20;
-            }
-        }, this)
+                this.money -= this.llamaCount * 20;
+            },this)
+        }
     },
     
     addLlama: function() {
         var llama = this.llamas.getFirstDead();
         if (llama === null) {return;}
         llama.reset(0, 400);
+        llama.scale.x = 1; llama.scale.y = 1;
         llama.body.velocity.x = Math.random() * 100 ; 
         llama.body.velocity.y = Math.random() * 300;
         llama.checkWorldBounds = true;
         llama.body.collideWorldBounds = true;
         llama.body.bounce.set(1);
         llama.lastFed = new Date().getTime() / 1000;
+        llama.growth = 0
     },
     
     sell: function() {
@@ -195,11 +224,29 @@ var mainState = {
             if (this.now - llama.lastFed > this.feedAlertTime){
                 this.feedAlert.visible = true;
             }
-            if (this.now - llama.lastFed > 30) {
+            if (this.now - llama.lastFed > 120) {
                 this.sell();
             }
         }, this);
         
+    },
+    
+    grow: function() {
+        this.llamas.forEachAlive(function(llama) {
+            llama.growth++
+            if (llama.growth > 10000) {
+                llama.scale.x += this.growth; llama.scale.y += this.growth;
+                llama.growth = 0;
+            }
+        },this);
+    },
+    
+    grassOnclick: function() {
+        this.gBuyButton.visible = !this.gBuyButton.visible;  
+    },
+    
+    buyGrass: function() {
+        this.grass ++;
     }
        
     
