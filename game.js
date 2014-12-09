@@ -1,9 +1,12 @@
 /*global Phaser*/
 /*jslint sloppy:true, browser: true, devel: true, eqeq: true, vars: true, white: true*/
 var game;
-
+var time = 0;
+var money = 1000000;
+var llamaCount = 0;
+var grassSupply = 0;
+var highScore = 0;
 var mainMenu = {
-
     preload: function() {
         game.load.image('ferrisWheel', 'imgs/ferrisWheel.png');
         game.load.image('sky', 'imgs/skyBackground.png');
@@ -77,9 +80,7 @@ var mainState = {
         
         //variables
         this.growth = 0.2;
-        this.money = 1000000;
         this.textStyle = { fontSize: '22px', fill: '#fff'};
-        this.grassSupply = 0;
         
         //fence
         this.hFence = game.add.sprite(0,200, 'hfence');
@@ -91,7 +92,6 @@ var mainState = {
         
         //llama stuff
         //TODO: MAKE SPRITE CLASS AND MAKE IT RESEMBLE BUTTONS CLASS
-        this.llamaCount = 1;
         this.llama = game.add.button(0, this.hFence.position.y -10, 'llama', this.llamaOnClick, this);
         this.llamas = game.add.group(game, 'llamas','llamas');
         this.llamas.enableBody = true;
@@ -132,29 +132,36 @@ var mainState = {
         this.gBuyButton.visible = false;
         
         //text
-        this.llamaText = game.add.text(0,0,'Llamas: '+ this.llamaCount, this.textStyle);
-        this.moneyText = game.add.text(game.world.width/3 , 0, 'Money: $' + this.money,  this.textStyle);
-        this.grassText = game.add.text(this.gBuyButton.position.x + this.gBuyButton.width + 10, this.gBuyButton.position.y, '' + this.grassSupply, this.textStyle);
+        this.llamaText = game.add.text(0,0,'Llamas: '+ llamaCount, this.textStyle);
+        this.moneyText = game.add.text(game.world.width/3 , 0, 'Money: $' + money,  this.textStyle);
+        this.grassText = game.add.text(this.gBuyButton.position.x + this.gBuyButton.width + 10, this.gBuyButton.position.y, '' + grassSupply, this.textStyle);
         this.grassText.visible = false;
         //mini games button
         
         
         this.miniGamesButton = game.add.button(game.world.width - 200 , game.world.height - 138, 'mg', this.miniGames, this)
+        
+        game.time.events.loop(1000, this.timer, this);
+        
+        for (var i = 0; i < llamaCount; i++) {
+            this.addLlama();
+        }
 
         
     },
     
     update: function () {
         //update texts
-        this.llamaText.setText('Llamas: '+ this.llamaCount);
-        this.moneyText.setText('Money: $' + this.money);
-        this.grassText.setText('' + this.grassSupply);
-        this.now = new Date().getTime() / 1000;
+        this.llamaText.setText('Llamas: '+ llamaCount);
+        this.moneyText.setText('Money: $' + money);
+        this.grassText.setText('' + grassSupply);
+        this.now = time;
         var llama = this.llamas.getFirstAlive();
         if (llama != null){
             this.starve();
             this.grow();
         } else {return;}
+        
         
         
         //keep llamas inside fence
@@ -173,37 +180,37 @@ var mainState = {
     },
     
     buyOnClick: function () {
-        if (this.money >= 100 ) {
-            this.llamaCount++;
+        if (money >= 100 ) {
+            llamaCount++;
             this.addLlama();
-            this.money -= 100;
+            money -= 100;
         }
     },
     
     sellOnClick: function() {
-        if (this.llamaCount > 1){
-            this.llamaCount--;
+        if (llamaCount > 1){
+            llamaCount--;
             var llama = this.llamas.getFirstAlive();
             this.multiple = ((llama.scale.x - 1 ) / this.growth ) + 1 ;
-            this.money = this.money + Math.floor( 100 * this.multiple);
+            money = money + Math.floor( 100 * this.multiple);
             this.sell();
         }
     },
     feedOnClick: function() {
-        if (this.grassSupply >= 1) {
+        if (grassSupply >= 1) {
             this.llamas.forEachAlive(function(llama){
                 if (this.now - llama.lastFed > this.feedAlertTime){
-                    this.grassSupply--;
-                    llama.lastFed = new Date().getTime() / 1000;
+                    grassSupply--;
+                    llama.lastFed = time;
                 }
             }, this);
         }
     },
     feedAll: function(){
-        if (this.grassSupply >= this.llamaCount) {
+        if (grassSupply >= llamaCount) {
             this.llamas.forEachAlive(function(llama) {
-                llama.lastFed = new Date().getTime() / 1000;
-                this.grassSupply -= this.llamaCount;
+                llama.lastFed = time;
+                grassSupply -= llamaCount;
             },this);
         }
     },
@@ -218,7 +225,7 @@ var mainState = {
         llama.checkWorldBounds = true;
         llama.body.collideWorldBounds = true;
         llama.body.bounce.set(1);
-        llama.lastFed = new Date().getTime() / 1000;
+        llama.lastFed = time;
         llama.growth = 0;
     },
     
@@ -257,21 +264,27 @@ var mainState = {
     },
     
     buyGrass: function() {
-        if (this.money >= 20) {
-            this.grassSupply++;
-            this.money -= 20;
+        if (money >= 20) {
+            grassSupply++;
+            money -= 20;
         }
     },
     
     miniGames: function() {
             this.llamas.visible = false;
-            game.state.start('mgSelection')}
+            game.state.start('mgSelection')
+    },
+    
+    timer: function() {
+        time ++;
+    }
 };
 
 var mgSelection = {
     preload: function() {
         game.load.image('sky', 'imgs/skyBackground.png');
         game.load.image('flappyLlama', 'imgs/flappyLlamasIcon.png');
+        game.load.image('back', 'imgs/backButton.png');
     },
     create: function() {
         //bg
@@ -279,6 +292,10 @@ var mgSelection = {
         
         //game icons
         this.flappyLlama = game.add.button(100, 100, 'flappyLlama', function() {game.state.start('flappyLlama')} , this);
+        
+        //back button
+        this.back = game.add.button(0,0, 'back', function() {game.state.start('main')}, this);
+        this.back.scale.x = 0.3; this.back.scale.y = 0.3;
     }    
 };
 
@@ -289,6 +306,8 @@ var flappyLlama = {
         game.load.image('pipe', 'imgs/pipe.png');
         game.load.image('pipe2', 'imgs/pipe2.png');
         game.load.image('board', 'imgs/board.png');
+        game.load.image('replay', 'imgs/replayButton.png');
+        game.load.image('back', 'imgs/backButton.png');
     },
     create: function() {
         game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -316,20 +335,27 @@ var flappyLlama = {
         
         this.pipes2 = game.add.group();
         this.pipes2.enableBody = true;
-        this.pipes2s.createMultiple=(5, 'pipe2');
-        
+        this.pipes2.createMultiple(5, 'pipe2');
+        this.pipes2.checkWorldBounds = true;
+        this.pipes2.outOfBoundsKill = true;
         //texts
         this.score = 0;  
-        this.scoreText = game.add.text(game.world.centerX, 0, ''+ this.score, { font: "30px Arial", fill: "#ffffff" });  
-        
+        this.scoreText = game.add.text(game.world.centerX, 0, ''+ this.score, { font: "30px Arial", fill: "#ffffff" });
+            
     },
     
     update: function() {
         if (this.llama.inWorld == false){
-            this.restart();
+            this.gameOver();
+        }
+        //fix this
+        if (this.llama.position.x == this.pipes) {
+            this.score++;
         }
         
-        game.physics.arcade.overlap(this.llama, this.addRowOfPipes, this.gameOver, null, this); 
+        game.physics.arcade.overlap(this.llama, this.pipes, this.gameOver, null, this);
+        game.physics.arcade.overlap(this.llama, this.pipes2, this.gameOver, null, this); 
+
     },
     
     jump: function() {
@@ -338,8 +364,17 @@ var flappyLlama = {
     
     gameOver: function() {
         this.llama.body.velocity.y = 0;
-        this.pipes.body.velocity.y = 0;
+        this.pipes.forEachAlive(function(pipeT){
+            pipeT.body.velocity.x = 0;
+        },this);
+        this.pipes2.forEachAlive(function(pipeB){
+            pipeB.body.velocity.x = 0;
+        },this);
         this.gameOverBoard = game.add.sprite(50, 50, 'board');
+        this.back = game.add.button(60, 350, 'back', function() {game.state.start('mgSelection')}, this);
+        this.replay = game.add.button(this.back.position.x + this.back.width + 5, this.back.position.y,'replay', this.restart, this);
+        this.scoreText2 = game.add.text(game.world.centerX - 200,game.world.centerY - 100, 'Score:' + this.score, { font: "60px Arial", fill: "black" });
+        this.highScoreText = game.add.text(game.world.centerX - 200,game.world.centerY , 'High score:' + highScore, { font: "60px Arial", fill: "black" });
     },
     
     restart: function() {
@@ -347,23 +382,20 @@ var flappyLlama = {
     },
     
     addOnePipe: function(x, y) { 
-        //TODO: ask hurshal why it's like reset of null & how to make main state functioning in the bakground kinda thing
         var pipeT = this.pipes.getFirstDead();
         pipeT.reset(game.world.width, Math.random() * -200);
-        pipeT.body.velocity.x = -200; 
+        pipeT.body.velocity.x = -200;
+        pipeT.checkWorldBounds = true;
+        pipeT.outOfBoundsKill = true;
         
         
-        var pipeB = this.pipe2.getFirstDead();
-        pipeB.reset(pipeT.position.x, pipeT.position.y + 200);
+        var pipeB = this.pipes2.getFirstDead();
+        pipeB.reset(pipeT.position.x, pipeT.position.y + 130 + pipeT.height);
+        pipeB.body.velocity.x = -200;
+        pipeB.checkWorldBounds = true;
+        pipeB.outOfBoundsKill = true;
         
-    },
-    addRowOfPipes: function() {  
-        var hole = Math.floor(Math.random() * 5) + 1;
-
-        for (var i = 0; i < 8; i++)
-            if (i != hole && i != hole + 1) 
-                this.addOnePipe(400, i * 60 + 10);   
-    },
+    }
         
         
 };
@@ -375,4 +407,4 @@ game.state.add('main', mainState);
 game.state.add('mainMenu', mainMenu);
 game.state.add('mgSelection', mgSelection);
 game.state.add('flappyLlama', flappyLlama);
-game.state.start('main');
+game.state.start('flappyLlama');
