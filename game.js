@@ -311,6 +311,7 @@ var flappyLlama = {
     },
     create: function() {
         game.physics.startSystem(Phaser.Physics.ARCADE);
+        this.gameOverhuh = false;
         
         //bg
         this.bg = game.add.sprite(0,0,'bg');
@@ -339,8 +340,8 @@ var flappyLlama = {
         this.pipes2.checkWorldBounds = true;
         this.pipes2.outOfBoundsKill = true;
         //texts
-        this.score = 0;  
-        this.scoreText = game.add.text(game.world.centerX, 0, ''+ this.score, { font: "30px Arial", fill: "#ffffff" });
+        this.score = -2;  
+        this.scoreText = game.add.text(game.world.centerX, 0, '', { font: "30px Arial", fill: "#ffffff" });
             
     },
     
@@ -348,18 +349,9 @@ var flappyLlama = {
         if (this.llama.inWorld == false){
             this.gameOver();
         }
-        //fix this
-        if (this.llama.position.x == this.pipes) {
-            this.score++;
-        }
-        
-        this.pipes.forEachAlive(function(pipeT) {
-            if (!pipeT.inWorld)
-                this.score++;
-        },this);
         
         
-        this.scoreText.setText(game.world.centerX, 0, ''+ this.score, { font: "30px Arial", fill: "#ffffff" });
+        this.scoreText.setText(Math.max(this.score, 0));
         
         game.physics.arcade.overlap(this.llama, this.pipes, this.gameOver, null, this);
         game.physics.arcade.overlap(this.llama, this.pipes2, this.gameOver, null, this); 
@@ -371,6 +363,9 @@ var flappyLlama = {
     },
     
     gameOver: function() {
+        if (highScore<= this.score)
+            highScore = this.score;
+        this.gameOverhuh = true;
         this.llama.body.velocity.y = 0;
         this.pipes.forEachAlive(function(pipeT){
             pipeT.body.velocity.x = 0;
@@ -381,7 +376,7 @@ var flappyLlama = {
         this.gameOverBoard = game.add.sprite(50, 50, 'board');
         this.back = game.add.button(60, 350, 'back', function() {game.state.start('mgSelection')}, this);
         this.replay = game.add.button(this.back.position.x + this.back.width + 5, this.back.position.y,'replay', this.restart, this);
-        this.scoreText2 = game.add.text(game.world.centerX - 200,game.world.centerY - 100, 'Score:' + this.score, { font: "60px Arial", fill: "black" });
+        this.scoreText2 = game.add.text(game.world.centerX - 200,game.world.centerY - 100, 'Score:' + Math.max(this.score, 0), { font: "60px Arial", fill: "black" });
         this.highScoreText = game.add.text(game.world.centerX - 200,game.world.centerY , 'High score:' + highScore, { font: "60px Arial", fill: "black" });
     },
     
@@ -389,20 +384,24 @@ var flappyLlama = {
         game.state.start('flappyLlama');
     },
     
-    addOnePipe: function(x, y) { 
-        var pipeT = this.pipes.getFirstDead();
-        pipeT.reset(game.world.width, Math.random() * -200);
-        pipeT.body.velocity.x = -200;
-        pipeT.checkWorldBounds = true;
-        pipeT.outOfBoundsKill = true;
+    addOnePipe: function(x, y) {
+        if (!this.gameOverhuh) {
         
-        
-        var pipeB = this.pipes2.getFirstDead();
-        pipeB.reset(pipeT.position.x, pipeT.position.y + 130 + pipeT.height);
-        pipeB.body.velocity.x = -200;
-        pipeB.checkWorldBounds = true;
-        pipeB.outOfBoundsKill = true;
-        
+            this.score++;
+            var pipeT = this.pipes.getFirstDead();
+            pipeT.reset(game.world.width, Math.random() * -200);
+            pipeT.body.velocity.x = -200;
+            pipeT.checkWorldBounds = true;
+            pipeT.outOfBoundsKill = true;
+
+
+            var pipeB = this.pipes2.getFirstDead();
+            pipeB.reset(pipeT.position.x, pipeT.position.y + 150 + pipeT.height);
+            pipeB.body.velocity.x = -200;
+            pipeB.checkWorldBounds = true;
+            pipeB.outOfBoundsKill = true;
+        } else
+            return;
     }
         
         
