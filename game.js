@@ -251,7 +251,7 @@ var mainState = {
     grow: function() {
         this.llamas.forEachAlive(function(llama) {
             llama.growth++;
-            if (llama.growth > 10000) {
+            if (llama.growth > 5000) {
                 llama.scale.x += this.growth; llama.scale.y += this.growth;
                 llama.growth = 0;
             }
@@ -353,6 +353,14 @@ var flappyLlama = {
             this.score++;
         }
         
+        this.pipes.forEachAlive(function(pipeT) {
+            if (!pipeT.inWorld)
+                this.score++;
+        },this);
+        
+        
+        this.scoreText.setText(game.world.centerX, 0, ''+ this.score, { font: "30px Arial", fill: "#ffffff" });
+        
         game.physics.arcade.overlap(this.llama, this.pipes, this.gameOver, null, this);
         game.physics.arcade.overlap(this.llama, this.pipes2, this.gameOver, null, this); 
 
@@ -407,4 +415,4 @@ game.state.add('main', mainState);
 game.state.add('mainMenu', mainMenu);
 game.state.add('mgSelection', mgSelection);
 game.state.add('flappyLlama', flappyLlama);
-game.state.start('flappyLlama');
+game.state.start('main');
