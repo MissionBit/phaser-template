@@ -1,6 +1,6 @@
-# Phaser Template
+# Phaser Templates
 
-Minimal template to start a [Phaser](http://phaser.io/) project with.
+Minimal templates to start a [Phaser](http://phaser.io/) project with.
 
 Phaser resources:
 
@@ -8,4 +8,4 @@ Phaser resources:
 * [Examples](http://examples.phaser.io)
 * [Forum](http://html5gamedevs.com/forum/14-phaser/)
 
-To download this template, click "Download Zip" on the right side of this page.
+To download these templates, click "Download Zip" on the right side of this page. Each template is in a separate folder.
