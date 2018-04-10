@@ -1,5 +1,5 @@
 var gameover = function(game){}
- 
+
 gameover.prototype = {
 	init: function(score){
 		alert("You scored: "+score)
@@ -11,6 +11,6 @@ gameover.prototype = {
 		playButton.anchor.setTo(0.5,0.5);
 	},
 	playTheGame: function(){
-		this.game.state.start("state1");
+		this.game.state.start("mainState");
 	}
 }
